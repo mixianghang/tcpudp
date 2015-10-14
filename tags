@@ -1,0 +1,92 @@
+!_TAG_FILE_FORMAT	2	/extended format; --format=1 will not append ;" to lines/
+!_TAG_FILE_SORTED	1	/0=unsorted, 1=sorted, 2=foldcase/
+!_TAG_PROGRAM_AUTHOR	Darren Hiebert	/dhiebert@users.sourceforge.net/
+!_TAG_PROGRAM_NAME	Exuberant Ctags	//
+!_TAG_PROGRAM_URL	http://ctags.sourceforge.net	/official site/
+!_TAG_PROGRAM_VERSION	5.8	//
+BUFFER_SIZE	./src/udpclient.h	/^#define BUFFER_SIZE /;"	d
+CLIENT_READ_BUFFER	./src/tcpclient.h	/^#define CLIENT_READ_BUFFER /;"	d
+CLIENT_WRITE_BUFFER	./src/tcpclient.h	/^#define CLIENT_WRITE_BUFFER /;"	d
+HTTPUTIL_H	./src/httputil.h	/^#define HTTPUTIL_H /;"	d
+Header	./src/httputil.h	/^} Header;$/;"	t	typeref:struct:http_header
+KeepAlive	./src/httputil.h	/^typedef enum KeepAlive{$/;"	g
+KeepAlive	./src/httputil.h	/^} KeepAlive;$/;"	t	typeref:enum:KeepAlive
+MAX_CONNECTIONS	./src/mthread-tcp-server.h	/^#define MAX_CONNECTIONS /;"	d
+MAX_CONNECTIONS	./src/tcpserver.h	/^#define MAX_CONNECTIONS /;"	d
+MAX_CONNECTION_QUEUE	./src/mthread-tcp-server.h	/^#define MAX_CONNECTION_QUEUE /;"	d
+MAX_CONNECTION_QUEUE	./src/tcpserver.h	/^#define MAX_CONNECTION_QUEUE /;"	d
+MAX_FILE_PATH	./src/httputil.h	/^#define MAX_FILE_PATH /;"	d
+MAX_HEADER_NAME	./src/httputil.h	/^#define MAX_HEADER_NAME /;"	d
+MAX_HEADER_VALUE	./src/httputil.h	/^#define MAX_HEADER_VALUE /;"	d
+MAX_READ_BUFFER	./src/tcpserver.h	/^#define MAX_READ_BUFFER /;"	d
+MAX_RECV_BUFFER	./src/mthread-tcp-server.h	/^#define MAX_RECV_BUFFER /;"	d
+MAX_RECV_BUFFER	./src/udpserver.h	/^#define MAX_RECV_BUFFER /;"	d
+MAX_REQUEST_HEADER	./src/httputil.h	/^#define MAX_REQUEST_HEADER /;"	d
+MAX_RESPONSE_HEADER	./src/httputil.h	/^#define MAX_RESPONSE_HEADER /;"	d
+MAX_SEND_BUFFER	./src/mthread-tcp-server.h	/^#define MAX_SEND_BUFFER /;"	d
+MAX_SEND_BUFFER	./src/udpserver.h	/^#define MAX_SEND_BUFFER /;"	d
+MAX_WAIT_NUM	./src/udpclient.h	/^#define MAX_WAIT_NUM /;"	d
+MAX_WRITE_BUFFER	./src/httputil.h	/^#define MAX_WRITE_BUFFER /;"	d
+MAX_WRITE_BUFFER	./src/tcpserver.h	/^#define MAX_WRITE_BUFFER /;"	d
+MTHREAD_TCP_SERVER_H	./src/mthread-tcp-server.h	/^#define MTHREAD_TCP_SERVER_H$/;"	d
+Request	./src/httputil.h	/^} Request;$/;"	t	typeref:struct:http_request
+RequestLine	./src/httputil.h	/^} RequestLine;$/;"	t	typeref:struct:http_request_line
+Response	./src/httputil.h	/^} Response;$/;"	t	typeref:struct:http_response
+ResponseLine	./src/httputil.h	/^} ResponseLine;$/;"	t	typeref:struct:http_response_line
+TCPCLIENT_H	./src/tcpclient.h	/^#define TCPCLIENT_H$/;"	d
+TCPSERVER_H	./src/tcpserver.h	/^#define TCPSERVER_H$/;"	d
+TCPSERVER_H	./src/udpserver.h	/^#define TCPSERVER_H$/;"	d
+UDPCLIENT_H	./src/udpclient.h	/^#define UDPCLIENT_H$/;"	d
+checkFileExist	./src/util.c	/^int checkFileExist(char * filePath) {$/;"	f
+code	./src/httputil.h	/^	char code[MAX_FILE_PATH];$/;"	m	struct:http_response_line
+connInfo	./src/mthread-tcp-server.h	/^struct connInfo {$/;"	s
+content_len	./src/httputil.h	/^	int content_len;$/;"	m	struct:http_request
+content_len	./src/httputil.h	/^	int content_len;$/;"	m	struct:http_response
+debug	./src/util.c	/^void debug(char* debug){$/;"	f
+downloadSingleFile	./src/httputil.c	/^int downloadSingleFile(char* filePath, int sockFd, enum KeepAlive isAlive) {$/;"	f
+error	./src/util.c	/^void error(char * error){$/;"	f
+filePath	./src/mthread-tcp-server.h	/^	char * filePath;$/;"	m	struct:connInfo
+formHeader	./src/httputil.c	/^int formHeader(Header * header, char * str, size_t strSize){$/;"	f
+getFileSize	./src/util.c	/^int getFileSize(char * filePath) {$/;"	f
+getLineFromSock	./src/util.c	/^int getLineFromSock(int sockFd, char* line, size_t size_line) {$/;"	f
+headers	./src/httputil.h	/^	Header * headers[MAX_REQUEST_HEADER];$/;"	m	struct:http_request
+headers	./src/httputil.h	/^	Header * headers[MAX_RESPONSE_HEADER];$/;"	m	struct:http_response
+http_header	./src/httputil.h	/^typedef struct http_header{$/;"	s
+http_request	./src/httputil.h	/^typedef struct http_request{$/;"	s
+http_request_line	./src/httputil.h	/^typedef struct http_request_line{$/;"	s
+http_response	./src/httputil.h	/^typedef struct http_response{$/;"	s
+http_response_line	./src/httputil.h	/^typedef struct http_response_line{$/;"	s
+isAlive	./src/httputil.h	/^	enum KeepAlive isAlive;$/;"	m	struct:http_request	typeref:enum:http_request::KeepAlive
+isAlive	./src/httputil.h	/^	enum KeepAlive isAlive;$/;"	m	struct:http_response	typeref:enum:http_response::KeepAlive
+isResolved	./src/httputil.h	/^	short isResolved;$/;"	m	struct:http_request
+main	./src/mthread-tcp-server.c	/^int main(int argc, char* argv[]) {$/;"	f
+main	./src/tcpclient.c	/^int main(int argc, char* argv[]) {$/;"	f
+main	./src/tcpserver.c	/^int main(int argc, char* argv[]) {$/;"	f
+main	./src/udpclient.c	/^int main(int argc, char* argv[]) {$/;"	f
+main	./src/udpserver.c	/^int main(int argc, char* argv[]){$/;"	f
+main1	./src/httputil.c	/^int main1(int argc, char * argv[]) {$/;"	f
+method	./src/httputil.h	/^	char method[MAX_FILE_PATH];$/;"	m	struct:http_request_line
+mutex1	./src/mthread-tcp-server.c	/^pthread_mutex_t mutex1 = PTHREAD_MUTEX_INITIALIZER;$/;"	v
+name	./src/httputil.h	/^	char  name[MAX_HEADER_NAME];$/;"	m	struct:http_header
+newsockthread	./src/mthread-tcp-server.c	/^void * newsockthread(void* tempConnInfo) {$/;"	f
+no_persistent	./src/httputil.h	/^	no_persistent$/;"	e	enum:KeepAlive
+notice	./src/util.c	/^void notice(char * notice){$/;"	f
+numAcceptedConns	./src/mthread-tcp-server.c	/^int numAcceptedConns = 0;$/;"	v
+parseHeader	./src/httputil.c	/^int parseHeader(const char* requestHeader, size_t sizeHeader, Header * headerStruct) {$/;"	f
+parseHttpRequestLine	./src/httputil.c	/^int parseHttpRequestLine(const char* str, size_t strSize, RequestLine * line){$/;"	f
+parseHttpResponseLine	./src/httputil.c	/^int parseHttpResponseLine(const char* str, size_t strSize, ResponseLine * line) {$/;"	f
+path	./src/httputil.h	/^	char path[MAX_FILE_PATH];$/;"	m	struct:http_request_line
+persistent	./src/httputil.h	/^	persistent,$/;"	e	enum:KeepAlive
+recieveFile	./src/util.c	/^int recieveFile(size_t fileSize, int sockFd) {$/;"	f
+requestLine	./src/httputil.h	/^	RequestLine requestLine;$/;"	m	struct:http_request
+responseLine	./src/httputil.h	/^	ResponseLine responseLine;$/;"	m	struct:http_response
+sendRequestedFile	./src/httputil.c	/^int sendRequestedFile(int sockFd, Request * httpRequest) {$/;"	f
+sockFd	./src/mthread-tcp-server.h	/^	int sockFd;$/;"	m	struct:connInfo
+sockthread	./src/mthread-tcp-server.c	/^void * sockthread(void * tempConnInfo) {$/;"	f
+text	./src/httputil.h	/^	char text[MAX_FILE_PATH];$/;"	m	struct:http_response_line
+threadId	./src/mthread-tcp-server.h	/^	pthread_t threadId;$/;"	m	struct:connInfo
+transferFile	./src/util.c	/^int transferFile(char* pathToFile, int sockFd){$/;"	f
+value	./src/httputil.h	/^	char value[MAX_HEADER_VALUE];$/;"	m	struct:http_header
+version	./src/httputil.h	/^	char version[MAX_FILE_PATH];$/;"	m	struct:http_request_line
+version	./src/httputil.h	/^	char version[MAX_FILE_PATH];$/;"	m	struct:http_response_line
+warning	./src/util.c	/^void warning(char * warning){$/;"	f

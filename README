@@ -1,0 +1,31 @@
+1. Build  by input the following command on terminal
+make
+
+2. run, the bin programs are located in the bin folder
+
+2.1 tcpclient
+tcpclient is the web client, you can use it by input
+start :
+./tcpclient ip-address port np/p filename
+
+2.2 tcpserver
+single thread web server, use as below:
+start :
+./tcpserver port
+
+2.3 mttserver
+start :
+multiple-tcp-server, use as below:
+./mttserver port
+
+2.4 udpclient
+start :
+./udpclient address port
+get file :
+after start, input the filename you want to get
+
+2.5 udpserver
+start :
+./udpserver port
+
+
