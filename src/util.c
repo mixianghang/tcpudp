@@ -109,7 +109,7 @@ int recieveFile(size_t fileSize, int sockFd) {
 	memset(buffer, '\0', sizeof(buffer));
 	while((tempLen = recv(sockFd, buffer, sizeof (buffer)-1, 0)) >= 0) {
 		recvLen += tempLen;
-		printf("recv %d bytes\n", tempLen);
+		//printf("recv %d bytes\n", tempLen);
 		//printf("%s",buffer);
 		if (recvLen >= fileSize) {
 			return recvLen;

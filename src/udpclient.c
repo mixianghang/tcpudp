@@ -9,6 +9,9 @@ int main(int argc, char* argv[]) {
 	int  len = 0;
 	fd_set readSet, originReadSet;
 	fd_set writeSet, originWriteSet;
+	struct timeval startTime;
+	struct timeval endTime;
+	gettimeofday(&startTime, NULL);
 	if (argc < 4) {
 	  printf("usage: /udpclient serverIp serverPort requestFile [localFileName]\n");
 	  printf("--serverIp: the ip address of the udp server\n");
@@ -49,16 +52,19 @@ int main(int argc, char* argv[]) {
 	}
 	memset(buffer, 0, sizeof buffer);
 	sprintf(buffer, "GET %s HTTP/1.1\r\n", argv[3]);
-	if ((len = sendto(clientSockFd, buffer, strlen(buffer), 0,  (struct sockaddr *)&addr, addrLen) != strlen(buffer))) {
+	printf("%s", buffer);
+	if ((len = sendto(clientSockFd, buffer, strlen(buffer), 0,  (struct sockaddr *)&addr, addrLen)) != strlen(buffer)) {
 	  printf("line %d: send request line  failed, dataLen %lu, sendLen %d\n", __LINE__, strlen(buffer), len);
 	  shutdown(clientSockFd, SHUT_RDWR);
 	  close(clientSockFd);
 	  return 1;
+	} else {
+	  printf("send request line successfully with %d bytes\n", len);
 	}
 
 	memset(buffer, 0, sizeof buffer);
 	sprintf(buffer, "\r\n");
-	if ((len = sendto(clientSockFd, buffer, strlen(buffer), 0,  (struct sockaddr *)&addr, addrLen) != strlen(buffer))) {
+	if ((len = sendto(clientSockFd, buffer, strlen(buffer), 0,  (struct sockaddr *)&addr, addrLen)) != strlen(buffer)) {
 	  printf("line %d: send blank line  failed, dataLen %lu, sendLen %d\n", __LINE__, strlen(buffer), len);
 	  shutdown(clientSockFd, SHUT_RDWR);
 	  close(clientSockFd);
@@ -155,5 +161,8 @@ int main(int argc, char* argv[]) {
 	}
 	shutdown(clientSockFd,SHUT_RDWR);
 	close(clientSockFd);
+	gettimeofday(&endTime, NULL);
+	int timecost = (endTime.tv_sec - startTime.tv_sec) * 1000000 + (endTime.tv_usec - startTime.tv_usec);
+	printf(" timecost is %d us\n", timecost);
 	return 0;
 }

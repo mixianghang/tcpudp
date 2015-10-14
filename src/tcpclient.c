@@ -106,6 +106,6 @@ int main(int argc, char* argv[]) {
 	close(clientSockFd);
 	gettimeofday(&endTime, NULL);
 	int timecost = (endTime.tv_sec - startTime.tv_sec) * 1000000 + (endTime.tv_usec - startTime.tv_usec);
-	printf(" timecost is %d\n", timecost);
+	printf(" timecost is %d us\n", timecost);
 	return 0;
 }
