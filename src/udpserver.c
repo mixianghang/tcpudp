@@ -211,6 +211,7 @@ int main(int argc, char* argv[]){
 	  close(sockFd);
 	  return 1;
 	}
+	int sendSum = 0;
 	memset(buffer, 0, sizeof buffer);
 	while((len = fread(buffer,sizeof(char), sizeof buffer -1,fp) ) > 0) {
 	  if (sendto(sockFd, buffer, len, 0, (struct sockaddr *) &clientAddr, addrLen) != len) {
@@ -219,10 +220,17 @@ int main(int argc, char* argv[]){
 		close(sockFd);
 		return 1;
 	  }
+	  sendSum += len;
 	  memset(buffer,0 ,sizeof buffer );
 	}
 	fclose(fp);
-	printf(" %s %s finish responsing request from %s:%d for file %s\n",__FILE__, __func__,  clientIp, clientPort, requestLine.path);
+	if (fileSize != sendSum) {
+	  printf("failed to send all the bytes  to client, should send %d bytes, only sent %d bytes\n", fileSize, sendSum); 
+	  shutdown(sockFd, SHUT_RDWR);
+	  close(sockFd);
+	  return 1;
+	}
+	printf(" %s %s finish responsing request from %s:%d for file %s with %d bytes\n",__FILE__, __func__,  clientIp, clientPort, requestLine.path, fileSize);
 	printf("ready to accept another request, if wanna stopping me, ctrl-c please!\n");
   }
 }

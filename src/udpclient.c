@@ -10,10 +10,11 @@ int main(int argc, char* argv[]) {
 	fd_set readSet, originReadSet;
 	fd_set writeSet, originWriteSet;
 	if (argc < 4) {
-	  printf("usage: /udpclient serverIp serverPort requestFile\n");
-	  printf("--serverIp the ip address of the udp server\n");
-	  printf("--serverPort the port of server\n");
-	  printf("--requestFile the file name to request\n");
+	  printf("usage: /udpclient serverIp serverPort requestFile [localFileName]\n");
+	  printf("--serverIp: the ip address of the udp server\n");
+	  printf("--serverPort: the port of server\n");
+	  printf("--requestFile: the file name to request\n");
+	  printf("--localFileName: optional, the file name where you want to save the response\n");
 	  exit(1);
 	}
 	clientSockFd         = socket(AF_INET, SOCK_DGRAM, 0);
@@ -101,6 +102,10 @@ int main(int argc, char* argv[]) {
 	int waitNum  = 0;
 	int tempLen  = 0;
 	int leftLen  = contentLen;
+	FILE *localFile = NULL;
+	if (argc >= 5) {
+	  localFile = fopen(argv[4], "w+");
+	}
 	while (leftLen > 0) {
 	  readSet = originReadSet;
 	  select(maxFd, &readSet, NULL, NULL, &waitInterval);
@@ -124,11 +129,19 @@ int main(int argc, char* argv[]) {
 	  memset(buffer, 0, sizeof buffer);
 	  if ((len = recvfrom(clientSockFd, buffer, tempLen, 0,  (struct sockaddr *)&addr, &addrLen)) <= 0) {
 		printf("%d recv data failed \n", __LINE__);
+		if (localFile != NULL) {
+		  fclose(localFile);
+		}
 		shutdown(clientSockFd, SHUT_RDWR);
 		close(clientSockFd);
 		break;
 	  }
-	  printf("recved %d bytes http respone content\n", len);
+	  if (localFile != NULL) {
+		printf("recved %d bytes into file %s\n", len, argv[4]);
+		fprintf(localFile, "%s", buffer);
+	  } else {
+		printf("%s", buffer);
+	  }
 	  leftLen -= len;
 	}
 
@@ -136,6 +149,9 @@ int main(int argc, char* argv[]) {
 	  printf("successfully recved all the %d bytes data from server %s:%d for file %s\n", contentLen, ip, convertedPort, argv[3]);
 	} else {
 	  printf("falied recved all the %d , but %d bytes data from server %s:%d for file %s\n", contentLen, contentLen - leftLen,  ip, convertedPort, argv[3]);
+	}
+	if (localFile != NULL) {
+	  fclose(localFile);
 	}
 	shutdown(clientSockFd,SHUT_RDWR);
 	close(clientSockFd);

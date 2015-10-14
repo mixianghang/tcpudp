@@ -1,3 +1,14 @@
+#make temporary files
+aclocal.m4
+compile*
+config.*
+configure*
+depcomp*
+install-sh*
+Makefile
+Makefile.in
+missing*
+stamp-h1
 # Object files
 *.o
 *.ko
@@ -30,3 +41,11 @@
 
 # Debug files
 *.dSYM/
+autom4te.cache/
+bin/.deps/ 
+bin/mttserver
+bin/tcpserver
+bin/tcpclient
+bin/udpserver
+bin/udpclient
+
