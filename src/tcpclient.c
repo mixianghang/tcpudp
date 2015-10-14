@@ -23,6 +23,9 @@ int main(int argc, char* argv[]) {
 	char tempFilePath1[256];
 	char tempFilePath2[256];
 	char serverIpStr[20];
+	struct timeval startTime;
+	struct timeval endTime;
+	gettimeofday(&startTime, NULL);
 	
 	clientSockFd = socket(AF_INET, SOCK_STREAM, 0);
 	if (argc < 5) {
@@ -99,7 +102,10 @@ int main(int argc, char* argv[]) {
 		printf("using non-persistent connection to download file %s ...\n",argv[4]);
 		downloadSingleFile(filePath,clientSockFd, isAlive);
 	}
-	shutdown(clientSockFd,SHUT_RDWR);
+	shutdown(clientSockFd, SHUT_RDWR);
 	close(clientSockFd);
+	gettimeofday(&endTime, NULL);
+	int timecost = (endTime.tv_sec - startTime.tv_sec) * 1000000 + (endTime.tv_usec - startTime.tv_usec);
+	printf(" timecost is %d\n", timecost);
 	return 0;
 }
