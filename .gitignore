@@ -49,3 +49,5 @@ bin/tcpclient
 bin/udpserver
 bin/udpclient
 
+bin/index*.html
+
