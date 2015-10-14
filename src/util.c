@@ -67,11 +67,18 @@ int getLineFromSock(int sockFd, char* line, size_t size_line) {
 	int lenLine;
 	char buffer;
 	int tempResult; 
+	struct timeval waitInterval;
 
 	memset(&buffer, '\0', sizeof(buffer));
 	lenLine = 0;
 	tempResult = 0;
-	while((tempResult = recv(sockFd, &buffer, 1, 0)) >= 0 && lenLine < size_line) {
+	waitInterval.tv_sec = MAX_WAIT_SECONDS;
+	waitInterval.tv_usec = 0;
+	if(setsockopt(sockFd, SOL_SOCKET, SO_RCVTIMEO, &waitInterval, sizeof(struct timeval)) < 0) {
+	  printf("set recv timeout failed\n");
+	  return -1;
+	}
+	while((tempResult = recv(sockFd, &buffer, 1, 0)) > 0 && lenLine < size_line) {
 		if (tempResult > 0) {
 			if (buffer == '\n') {
 				if (lenLine > 0) {
@@ -102,7 +109,7 @@ int recieveFile(size_t fileSize, int sockFd) {
 	memset(buffer, '\0', sizeof(buffer));
 	while((tempLen = recv(sockFd, buffer, sizeof (buffer)-1, 0)) >= 0) {
 		recvLen += tempLen;
-		//printf(buffer);
+		printf(buffer);
 		if (recvLen >= fileSize) {
 			return recvLen;
 		}

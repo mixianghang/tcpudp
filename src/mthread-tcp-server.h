@@ -28,6 +28,7 @@
 #define MAX_SEND_BUFFER 1024 
 
 struct connInfo {
+	struct sockaddr_in addr;
 	int sockFd;
 	pthread_t threadId;
 	char * filePath;

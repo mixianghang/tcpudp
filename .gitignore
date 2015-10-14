@@ -42,7 +42,7 @@ stamp-h1
 # Debug files
 *.dSYM/
 autom4te.cache/
-bin/.deps/ 
+bin/.deps/
 bin/mttserver
 bin/tcpserver
 bin/tcpclient

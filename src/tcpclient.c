@@ -21,10 +21,13 @@ int main(int argc, char* argv[]) {
 	char filePath[256];
 	char tempFilePath[256];
 	char tempFilePath1[256];
+	char tempFilePath2[256];
+	char serverIpStr[20];
 	
 	clientSockFd = socket(AF_INET, SOCK_STREAM, 0);
 	if (argc < 5) {
 		error("usage: tcpclient hostname port isPersistent filename\n");
+		return 1;
 	}
 	len_sockaddr_in = sizeof( struct sockaddr_in);
 	serverIp = inet_addr(argv[1]);
@@ -32,41 +35,71 @@ int main(int argc, char* argv[]) {
 	serverAddr_in.sin_family      = AF_INET;
 	serverAddr_in.sin_port        = htons(serverPort);
 	serverAddr_in.sin_addr.s_addr = serverIp;
+	memset(serverIpStr, 0, sizeof(serverIpStr));
+	inet_ntop(AF_INET, &(serverAddr_in.sin_addr), serverIpStr, 19);
 	if (strcmp(argv[3],"p") == 0) {
-		isAlive = persistent;
+	  isAlive = persistent;
 	}
 	if (connect(clientSockFd,(struct sockaddr*) &serverAddr_in,(socklen_t)len_sockaddr_in) != 0){
-		error("failed to connect\n");
-		exit(1);
+	  printf("failed to connect to server %s:%d \n", serverIpStr, serverPort);
+	  shutdown(clientSockFd, SHUT_RDWR);
+	  close(clientSockFd);
+	  return 1;
+	} else {
+	  printf("connect to server %s:%d successfully\n", serverIpStr, serverPort);
 	}
-
 	memset(filePath, '\0', sizeof(filePath));
 	snprintf(filePath, sizeof(filePath)-1, "./%s",argv[4]);
 	if (isAlive == persistent) {
-		if (checkFileExist(filePath)) {
-			FILE * fp;
-			fp = fopen(filePath, "r");
-			if (fp == NULL) {
-				printf("open file %s failed, please check file permission\n", filePath);
-			} else {
-				memset(tempFilePath, '\0', sizeof(tempFilePath));
-				memset(tempFilePath1, '\0', sizeof(tempFilePath1));
-				printf("download file using persistent connection\n");
-				while (fgets(tempFilePath, sizeof(tempFilePath)-1, fp)) {
-					tempFilePath[strlen(tempFilePath) - 1] = '\0';
-					snprintf(tempFilePath1, sizeof(tempFilePath1) - 1, "./%s", tempFilePath);
-					printf("start download file %s ...\n",tempFilePath1);
-					downloadSingleFile(tempFilePath1, clientSockFd, isAlive);
-					memset(tempFilePath, '\0', sizeof(tempFilePath));
-					memset(tempFilePath1, '\0', sizeof(tempFilePath1));
-				}
-			}
-		} else {
-			printf("cannot find file %s in the current dir\n", argv[4]);
-		}
+	  if (checkFileExist(filePath)) {
+		  FILE * fp;
+		  fp = fopen(filePath, "r");
+		  if (fp == NULL) {
+			  printf("open filelist file %s failed, please check file permission\n", filePath);
+			  shutdown(clientSockFd, SHUT_RDWR);
+			  close(clientSockFd);
+			  return 1;
+		  } else {
+			  memset(tempFilePath, '\0', sizeof(tempFilePath));
+			  memset(tempFilePath1, '\0', sizeof(tempFilePath1));
+			  memset(tempFilePath2, '\0', sizeof(tempFilePath2));
+			  printf("http request using persistent connection\n");
+			  if (fgets(tempFilePath, sizeof(tempFilePath)-1, fp) == NULL) {
+				printf("no content in the filelist file %s\n", filePath);
+				shutdown(clientSockFd, SHUT_RDWR);
+				close(clientSockFd);
+				return 1;
+			  }
+			  while (1) {
+				  if (fgets(tempFilePath1, sizeof(tempFilePath1)-1, fp) == NULL) {
+					isAlive = no_persistent;
+				  }
+				  tempFilePath[strlen(tempFilePath) - 1] = '\0';
+				  //snprintf(tempFilePath2, sizeof(tempFilePath2) - 1, "./%s", tempFilePath);
+				  printf("start send http request to download  file %s ...\n",tempFilePath);
+				  downloadSingleFile(tempFilePath, clientSockFd, isAlive);
+				  if (isAlive == no_persistent) {
+					break;
+				  } else {
+					memset(tempFilePath, 0, sizeof tempFilePath);
+					snprintf(tempFilePath, sizeof(tempFilePath) - 1, "./%s", tempFilePath1);
+					printf("start to download file %s\n", tempFilePath);
+				  }
+				  memset(tempFilePath1, 0, sizeof tempFilePath1);
+				  memset(tempFilePath2, '\0', sizeof(tempFilePath2));
+			  }
+		  }
+	  } else {
+		  printf("cannot find file %s in the current dir\n", argv[4]);
+		  shutdown(clientSockFd, SHUT_RDWR);
+		  close(clientSockFd);
+		  return 1;
+	  }
 	} else {
-		printf("start download file %s ...\n",argv[4]);
+		printf("using non-persistent connection to download file %s ...\n",argv[4]);
 		downloadSingleFile(filePath,clientSockFd, isAlive);
 	}
 	shutdown(clientSockFd,SHUT_RDWR);
+	close(clientSockFd);
+	return 0;
 }

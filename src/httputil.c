@@ -262,10 +262,14 @@ int sendRequestedFile(int sockFd, Request * httpRequest) {
 	char * responseLine;
 	char *filePath = (httpRequest->requestLine).path;
 	int fileSize;
+	if (!checkFileExist(filePath)) {
+	  printf("file %s doesn't exist\n", filePath);
+	}
 	short isResolved = httpRequest->isResolved;
 	if ( isResolved ) {
 		fileSize = getFileSize(filePath);
 		if (fileSize < 0) {
+			printf("request file %s not found, so send 404 response\n", filePath);
 			if (send(sockFd, notFound_line, strlen(notFound_line), 0) < 0) {
 				return -1;
 			}
@@ -328,6 +332,7 @@ int sendRequestedFile(int sockFd, Request * httpRequest) {
 			return 0;
 		} else {
 
+			printf("start to send request file of size %d bytes...\n", fileSize);
 			//send 200 OK status line
 			if (send(sockFd, ok_line, strlen(ok_line), 0) < 0) {
 				return -1;
@@ -386,12 +391,13 @@ int sendRequestedFile(int sockFd, Request * httpRequest) {
 			
 			//send request body
 			if (transferFile(filePath, sockFd) == 0) {
-				printf("tranfer file successfully\n");
+				printf("send  file %s of %d bytes successfully\n", filePath, fileSize);
 			} else {
 				return -1;
 			}
 		}
 	} else {
+		printf("start to send 400 bad request\n");
 		if (send(sockFd, badReq_line, strlen(badReq_line), 0) < 0 ) {
 			return -1;
 		}
@@ -487,9 +493,11 @@ int downloadSingleFile(char* filePath, int sockFd, enum KeepAlive isAlive) {
 	memset(buffer, '\0', sizeof(buffer));
 	snprintf(buffer, sizeof(buffer) - 1, "\r\n");
 	if (send(sockFd, buffer, strlen(buffer), 0) < 0) {
+		printf("%s %s send request for file %s failed\n", __FILE__, __func__, filePath);
 		return -1;
 	}
 
+	printf(" start to recv response for file %s\n", filePath);
 	//start to recieve response
 	int numHeaders = 0;
 	memset(buffer,'\0',sizeof(buffer));
@@ -534,6 +542,11 @@ int downloadSingleFile(char* filePath, int sockFd, enum KeepAlive isAlive) {
 
 	if (response->content_len > 0) {
 		recvLen = recieveFile(response->content_len, sockFd);
+		if (recvLen == response->content_len) {
+		  printf("\nsuccessfully receive %d bytes for file %s\n", recvLen, filePath);
+		} else {
+		  printf("\n%s %s failed  to  receive %d bytes for file %s, only recev %d bytes\n", __FILE__, __func__, response->content_len, filePath, recvLen);
+		}
 	} else {
 		return -1;
 	}

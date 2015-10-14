@@ -38,16 +38,37 @@ int main(int argc, char* argv[]) {
 	serverAddr_in.sin_family         = AF_INET;
     serverAddr_in.sin_addr.s_addr    = INADDR_ANY;
 	serverAddr_in.sin_port           = htons(listenPort);
-	
+	// set address reuse option
+	int reuseOn = 1;
+	if (setsockopt(listenSockFd, SOL_SOCKET, SO_REUSEADDR, &reuseOn, sizeof reuseOn) < 0) {
+	  printf("set reuse option failed\n");
+	  return 1;
+	}
+
 	if (bind(listenSockFd, (struct sockaddr *)&serverAddr_in, len_sockaddr_in) < 0) {
 		error("bind to port failed \n");
 		exit(1);
 	}
 
 	listen(listenSockFd,MAX_CONNECTION_QUEUE);
-	acceptedSockFd = accept(listenSockFd, NULL, NULL);
+	char clientIp[20];
+	int clientPort;
+	struct sockaddr_in clientAddr;
+	socklen_t addrLen = sizeof (struct sockaddr_in);
+	acceptedSockFd = accept(listenSockFd, (struct sockaddr *)&clientAddr, &addrLen);
+	if (acceptedSockFd >= 0) {
+	  clientPort = ntohs(clientAddr.sin_port);
+	  memset(clientIp, 0, sizeof clientIp);
+	  inet_ntop(AF_INET, &(clientAddr.sin_addr), clientIp, 19);
+	  printf("start to serve request from client %s:%d\n", clientIp, clientPort);
+	} else {
+	  printf("failed to accept new request\n");
+	  shutdown(listenSockFd, SHUT_RDWR);
+	  close(listenSockFd);
+	  return 1;
+	}
 	//accept new connection 
-	while(1){
+	while (1) {
 		memset(readBuffer,'\0',sizeof(readBuffer));
 		Request * request = (Request*) malloc(sizeof(Request));
 		request->isResolved = 0;
@@ -89,10 +110,35 @@ int main(int argc, char* argv[]) {
 				}
 				
 			} 
+			printf("start to send reques file %s to client %s:%d\n", request->requestLine.path, clientIp, clientPort);
 			//send requested file to client
 			if (sendRequestedFile(acceptedSockFd, request) < 0) {
-				printf("send requested file failed\n");
+				printf("\nsend requested file %s  to client %s:%d failed\n", request->requestLine.path, clientIp, clientPort);
+			} else {
+				printf("\nsucceed to send requested file %s  to client %s:%d\n", request->requestLine.path, clientIp, clientPort);
 			}
+		} else {
+		  printf("no request from client %s:%d for %d seconds, so close it\n", clientIp, clientPort, MAX_WAIT_SECONDS);
+		  shutdown(acceptedSockFd, SHUT_RDWR);
+		  close(acceptedSockFd);
+		  if (request != NULL) {
+			free(request);
+		  }
+		  printf("close connection from client %s:%d\n", clientIp, clientPort);
+		  printf("ready to accept new connection, if you want to stop me, ctrl-C\n");
+		  acceptedSockFd = accept(listenSockFd, (struct sockaddr *)&clientAddr, &addrLen);
+		  if (acceptedSockFd >= 0) {
+			clientPort = ntohs(clientAddr.sin_port);
+			memset(clientIp, 0, sizeof clientIp);
+			inet_ntop(AF_INET, &(clientAddr.sin_addr), clientIp, 19);
+			printf("start to serve request from client %s:%d\n", clientIp, clientPort);
+		  } else {
+			printf("failed to accept new request\n");
+			shutdown(listenSockFd, SHUT_RDWR);
+			close(listenSockFd);
+			return 1;
+		  }
+		  continue;
 		}
 
 
@@ -105,9 +151,22 @@ int main(int argc, char* argv[]) {
 		free(request);
 
 		if (isAlive != persistent) {
-			shutdown(acceptedSockFd, SHUT_RDWR);
-			close(acceptedSockFd);
-			acceptedSockFd = accept(listenSockFd, NULL, NULL);
+		  shutdown(acceptedSockFd, SHUT_RDWR);
+		  close(acceptedSockFd);
+		  printf("close connection from client %s:%d\n", clientIp, clientPort);
+		  printf("read to accept new connection, if you want to stop me, ctrl-C\n");
+		  acceptedSockFd = accept(listenSockFd, (struct sockaddr *)&clientAddr, &addrLen);
+		  if (acceptedSockFd >= 0) {
+			clientPort = ntohs(clientAddr.sin_port);
+			memset(clientIp, 0, sizeof clientIp);
+			inet_ntop(AF_INET, &(clientAddr.sin_addr), clientIp, 19);
+			printf("start to serve request from client %s:%d\n", clientIp, clientPort);
+		  } else {
+			printf("failed to accept new request\n");
+			shutdown(listenSockFd, SHUT_RDWR);
+			close(listenSockFd);
+			return 1;
+		  }
 		}
 	}
 	shutdown(listenSockFd,SHUT_RDWR);

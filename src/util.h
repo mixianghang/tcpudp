@@ -5,6 +5,8 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 
+#define MAX_WAIT_SECONDS 5
+
 //printout msgs
 void error(char * error);
 void warning(char * warning);

@@ -31,7 +31,7 @@ int main(int argc, char* argv[]) {
 	struct sockaddr_in serverAddr_in;
 	int len_sockaddr_in = sizeof(struct sockaddr_in);
 	if (argc < 2) {
-		error("usage: ./tcpserver port\n");
+		error("usage: ./mttserver port\n");
 		exit(1);
 	}
 	listenSockFd = socket(AF_INET,SOCK_STREAM,0);//create socket 
@@ -41,26 +41,52 @@ int main(int argc, char* argv[]) {
 	serverAddr_in.sin_family         = AF_INET;
     serverAddr_in.sin_addr.s_addr    = INADDR_ANY;
 	serverAddr_in.sin_port           = htons(listenPort);
+
+	// set address reuse option
+	int reuseOn = 1;
+	if (setsockopt(listenSockFd, SOL_SOCKET, SO_REUSEADDR, &reuseOn, sizeof reuseOn) < 0) {
+	  printf("set reuse option failed\n");
+	  return 1;
+	}
 	
 	if (bind(listenSockFd, (struct sockaddr *)&serverAddr_in, len_sockaddr_in) < 0) {
-		error("bind to port failed \n");
+		printf("bind to port %d failed \n", listenPort);
 		exit(1);
+	} else {
+	  printf("bind to port %d successfully\n", listenPort);
 	}
 
 	listen(listenSockFd,MAX_CONNECTION_QUEUE);
-	struct connInfo tempConnInfo;
-	tempConnInfo.filePath = argv[2];
 	while (1) {
 		if (numAcceptedConns < MAX_CONNECTIONS) {
-			tempConnInfo.sockFd = accept(listenSockFd, NULL, NULL);
+			socklen_t addrLen = sizeof(struct sockaddr_in);
+			struct connInfo * tempConnInfo = (struct connInfo *) malloc(sizeof (struct connInfo));
+			if (tempConnInfo == NULL) {
+			  printf("create new connection failed\n");
+			  shutdown(listenSockFd, SHUT_RDWR);
+			  close(listenSockFd);
+			  return 1;
+			  continue;
+			}
+			if (numAcceptedConns == 0) {
+			  printf("I am idle, waiting for new connections, if you wanna stop me, ctrl-c\n"); 
+			}
+			tempConnInfo->sockFd = accept(listenSockFd, (struct sockaddr *)&(tempConnInfo->addr), &addrLen);
+			if (tempConnInfo->sockFd < 0) {
+			  printf("create new connection faied\n");
+			  shutdown(listenSockFd, SHUT_RDWR);
+			  close(listenSockFd);
+			  return 1;
+			}
 			pthread_mutex_lock(&mutex1);
-			pthread_create(&(tempConnInfo.threadId), NULL, newsockthread, (void*)&tempConnInfo);
+			pthread_create(&(tempConnInfo->threadId), NULL, newsockthread, (void*)tempConnInfo);
 			numAcceptedConns++;
-			printf("++current conns num is %d\n",numAcceptedConns);
+			printf("accept a new conn, current conn num is %d\n",numAcceptedConns);
 			pthread_mutex_unlock(&mutex1);
 		}
 	}
 	shutdown(listenSockFd,SHUT_RDWR);
+	close(listenSockFd);
 	exit(0);
 }
 
@@ -68,8 +94,14 @@ void * newsockthread(void* tempConnInfo) {
 	struct connInfo * connectInfo = (struct connInfo*) tempConnInfo;
 	char sendBuffer[MAX_SEND_BUFFER];
 	char readBuffer[MAX_RECV_BUFFER];
+	char clientIp[20];
+	int clientPort;
 	int acceptedSockFd  = connectInfo->sockFd;
 	pthread_t threadId = connectInfo->threadId;
+	memset(clientIp, 0, sizeof clientIp);
+	clientPort = ntohs(connectInfo->addr.sin_port);
+	inet_ntop(AF_INET, &(connectInfo->addr.sin_addr), clientIp, 19);
+	printf("start to serve request from %s:%d\n", clientIp, clientPort);
 	while(1) {
 		int numHeaders = 0;
 		memset(readBuffer,'\0',sizeof(readBuffer));
@@ -80,14 +112,14 @@ void * newsockthread(void* tempConnInfo) {
 		if (getLineFromSock(acceptedSockFd, readBuffer, sizeof(readBuffer)-1) > 0) {//read request line
 			//parse requestline successfully
 			if (parseHttpRequestLine(readBuffer, strlen(readBuffer), &(request->requestLine)) >= 0){
-				printf("parsed requestline path is %s\n", request->requestLine.path);
+				printf("parsed requestline path for %s:%d is %s\n", clientIp, clientPort, request->requestLine.path);
 				//read each header per line, end by a blank line
 				numHeaders = 0;
 				memset(readBuffer,'\0',sizeof(readBuffer));
 				while (getLineFromSock(acceptedSockFd, readBuffer, sizeof(readBuffer)-1) > 0) { 
 					request->headers[numHeaders] = (Header*) malloc(sizeof(Header));
 					if ( parseHeader(readBuffer, strlen(readBuffer), request->headers[numHeaders]) > 0) {
-						printf("parsed header name %s  value %s\n",request->headers[numHeaders]->name, request->headers[numHeaders]->value);
+						printf("parsed header name %s  value %s from %s:%d\n",request->headers[numHeaders]->name, request->headers[numHeaders]->value, clientIp, clientPort);
 						// get connect alive status
 						if (strcmp(request->headers[numHeaders]->name, "Connection") == 0) {
 							if (strcmp(request->headers[numHeaders]->value, "keep-alive") == 0) {
@@ -115,8 +147,29 @@ void * newsockthread(void* tempConnInfo) {
 			} 
 			//send requested file to client
 			if (sendRequestedFile(acceptedSockFd, request) < 0) {
-				printf("send requested file failed\n");
+				printf("\nsend requested file %s failed for client %s:%d\n", request->requestLine.path, clientIp, clientPort);
+			} else {
+				printf("\nsend requested file %s successfully for client %s:%d\n", request->requestLine.path, clientIp, clientPort);
 			}
+		} else {
+		  printf(" \nno request from client %s:%d for %d seconds, so close it\n", clientIp, clientPort, MAX_WAIT_SECONDS);
+		  if (request != NULL) {
+			free(request);
+		  }
+		  if (connectInfo != NULL) {
+			free(connectInfo);
+		  }
+		  shutdown(acceptedSockFd, SHUT_RDWR);
+		  close(acceptedSockFd);
+		  printf("\nclose connection from client %s:%d\n",clientIp, clientPort);
+		  pthread_mutex_lock(&mutex1);
+		  numAcceptedConns--;
+		  printf("current connections num is %d\n",numAcceptedConns);
+		  if (numAcceptedConns == 0) {
+			printf("I am idle, waiting for new connections, if you wanna stop me, ctrl-c\n"); 
+		  }
+		  pthread_mutex_unlock(&mutex1);
+		  break;
 		}
 
 
@@ -129,10 +182,18 @@ void * newsockthread(void* tempConnInfo) {
 		free(request);
 
 		if (isAlive != persistent) {
+			if (connectInfo != NULL) {
+			  free(connectInfo);
+			}
 			shutdown(acceptedSockFd, SHUT_RDWR);
+			close(acceptedSockFd);
+			printf("\nclose connection from client %s:%d\n",clientIp, clientPort);
 			pthread_mutex_lock(&mutex1);
 			numAcceptedConns--;
 			printf("current connections num is %d\n",numAcceptedConns);
+			if (numAcceptedConns == 0) {
+			  printf("I am idle, waiting for new connections, if you wanna stop me, ctrl-c\n"); 
+			}
 			pthread_mutex_unlock(&mutex1);
 			break;
 		}
