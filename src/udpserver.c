@@ -76,7 +76,7 @@ int main(int argc, char* argv[]){
 
 
 	if (recvLen <= 2 || parseHttpRequestLine(buffer, recvLen - 2, &requestLine) == -1) {
-	  fprintf(stderr, " parse request line error\n %s", buffer);
+	  fprintf(stderr, " parse request line error:  %s", buffer);
 	  memset(buffer, 0, sizeof buffer);
 	  sprintf(buffer, "HTTP/1.0 400 Bad Request\n\r");
 	  if (sendto(sockFd, buffer, strlen(buffer), 0, (struct sockaddr *) &clientAddr, addrLen) <= 0) {
